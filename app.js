@@ -7,13 +7,21 @@ const app=document.querySelector("#app"),nav=document.querySelector("#bottomNav"
 const save=()=>localStorage.setItem(DB,JSON.stringify(S));
 const P=id=>S.profiles.find(x=>x.id==id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+
+window.onPremuraFirebaseUser=function(u){
+ if(!u)return;
+ S.user={uid:u.uid,name:u.displayName||"Utente",email:u.email||"",photoURL:u.photoURL||"",provider:"google"};
+ save();
+ if(!S.profiles.length){onboarding()}else{nav.style.display="grid";go("home")}
+};
+
 function toast(t){let d=document.createElement("div");d.className="toast";d.textContent=t;document.querySelector("#toastHost").append(d);setTimeout(()=>d.remove(),1900)}
 function header(t,s=""){return `<div class="top"><div><h1>${t}</h1>${s?`<p class="sub">${s}</p>`:""}</div><img class="brandLogo" src="premura-logo.png" alt="Premura"></div>`}
 function setNav(){
 function authScreen(mode="welcome"){
  page="auth";setNav();nav.style.display="none";
  if(mode==="welcome"){
-  app.innerHTML=`<div class="authWrap"><img src="premura-logo.png" class="authLogo"><h1 class="authTitle">Premura</h1><p class="sub">Ricorda ciò che conta, in un unico posto.</p><div class="authActions"><button class="primary" onclick="authScreen('register')">Crea account</button><button class="secondary" onclick="authScreen('login')">Accedi</button></div></div>`;return;
+  app.innerHTML=`<div class="authWrap"><img src="premura-logo.png" class="authLogo"><h1 class="authTitle">Premura</h1><p class="sub">Ricorda ciò che conta, in un unico posto.</p><div class="authActions"><button class="googleAuth" type="button" onclick="premuraGoogleLogin()"><span class="googleG">G</span><span>Continua con Google</span></button><div class="authDivider"><span>oppure</span></div><button class="primary" onclick="authScreen('register')">Crea account</button><button class="secondary" onclick="authScreen('login')">Accedi</button></div></div>`;return;
  }
  if(mode==="register"){
   app.innerHTML=`<button class="back" onclick="authScreen()">‹</button><h1>Crea account</h1><p class="sub">Bastano pochi dati per iniziare.</p><form onsubmit="registerUser(event)"><label>Nome</label><input id="rn" required autocomplete="name"><label>Email</label><input id="re" required type="email" autocomplete="email"><label>Password</label><input id="rp" required type="password" minlength="6" autocomplete="new-password"><label class="checkline"><input id="privacy" type="checkbox" required><span>Accetto l’informativa privacy e le condizioni d’uso.</span></label><button class="primary">Crea account</button></form><button class="authLink" onclick="authScreen('login')">Hai già un account? Accedi</button>`;return;
@@ -44,7 +52,7 @@ function firstProfile(type){
 function saveFirstProfile(e,type){
  e.preventDefault();S.profiles.push({id:Date.now(),name:firstName.value.trim(),type});save();nav.style.display="grid";go("home");toast("Profilo creato ✓");
 }
-async function logout(){ if(window.premuraGoogleLogout) await window.premuraGoogleLogout();S.user=null;save();authScreen()}
+async async function logout(){if(window.premuraGoogleLogout)await window.premuraGoogleLogout();S.user=null;save();authScreen()}
 document.querySelectorAll(".nav").forEach(b=>b.classList.toggle("active",b.dataset.page===page))}
 function go(p){page=p;setNav();({home,calendar,profiles,more}[p]||home)();scrollTo(0,0)}
 function reminderCard(r){let p=P(r.profile);return `<div class="card" onclick="editReminder(${r.id})"><i class="marker"></i><div class="grow"><h3>${esc(p?.name)} · ${esc(r.title)}</h3><span class="small">${esc(r.category)} · ${fmtDate(r.date)}</span></div><span class="time">${esc(r.time||"")}</span></div>`}
@@ -126,10 +134,10 @@ function importData(){document.querySelector("#importFile").click()}function doI
 function authScreen(mode="welcome"){
  page="auth";setNav();nav.style.display="none";
  if(mode==="welcome"){
-  app.innerHTML=`<div class="authWrap"><img src="premura-logo.png" class="authLogo"><h1 class="authTitle">Premura</h1><p class="sub">Ricorda ciò che conta, in un unico posto.</p><div class="authActions"><button class="primary" onclick="authScreen('register')">Crea account</button><button class="secondary" onclick="authScreen('login')">Accedi</button></div></div>`;return;
+  app.innerHTML=`<div class="authWrap"><img src="premura-logo.png" class="authLogo"><h1 class="authTitle">Premura</h1><p class="sub">Ricorda ciò che conta, in un unico posto.</p><div class="authActions"><button class="googleAuth" type="button" onclick="premuraGoogleLogin()"><span class="googleG">G</span><span>Continua con Google</span></button><div class="authDivider"><span>oppure</span></div><button class="primary" onclick="authScreen('register')">Crea account</button><button class="secondary" onclick="authScreen('login')">Accedi</button></div></div>`;return;
  }
  if(mode==="register"){
-  app.innerHTML=`<button class="back" onclick="authScreen()">‹</button><h1>Crea account</h1><p class="sub">Bastano pochi dati per iniziare.</p><form onsubmit="registerUser(event)"><label>Nome</label><input id="rn" required autocomplete="name"><label>Email</label><input id="re" required type="email" autocomplete="email"><label>Password</label><input id="rp" required type="password" minlength="6" autocomplete="new-password"><label class="checkline"><input id="privacy" type="checkbox" required><span>Accetto l’informativa privacy e le condizioni d’uso.</span></label><button class="googleAuth" type="button" onclick="premuraGoogleLogin()"><span class="googleG">G</span><span>Continua con Google</span></button><div class="authDivider"><span>oppure</span></div><button class="primary">Crea account</button></form><button class="authLink" onclick="authScreen('login')">Hai già un account? Accedi</button>`;return;
+  app.innerHTML=`<button class="back" onclick="authScreen()">‹</button><h1>Crea account</h1><p class="sub">Bastano pochi dati per iniziare.</p><form onsubmit="registerUser(event)"><label>Nome</label><input id="rn" required autocomplete="name"><label>Email</label><input id="re" required type="email" autocomplete="email"><label>Password</label><input id="rp" required type="password" minlength="6" autocomplete="new-password"><label class="checkline"><input id="privacy" type="checkbox" required><span>Accetto l’informativa privacy e le condizioni d’uso.</span></label><button class="primary">Crea account</button></form><button class="authLink" onclick="authScreen('login')">Hai già un account? Accedi</button>`;return;
  }
  app.innerHTML=`<button class="back" onclick="authScreen()">‹</button><h1>Accedi</h1><p class="sub">Bentornato su Premura.</p><form onsubmit="loginUser(event)"><label>Email</label><input id="le" required type="email" autocomplete="email"><label>Password</label><input id="lp" required type="password" autocomplete="current-password"><button class="primary">Accedi</button></form><button class="authLink" onclick="toast('Il recupero password sarà collegato al backend')">Password dimenticata?</button><button class="authLink" onclick="authScreen('register')">Crea un nuovo account</button>`;
 }
@@ -157,7 +165,7 @@ function firstProfile(type){
 function saveFirstProfile(e,type){
  e.preventDefault();S.profiles.push({id:Date.now(),name:firstName.value.trim(),type});save();nav.style.display="grid";go("home");toast("Profilo creato ✓");
 }
-function logout(){S.user=null;save();authScreen()}
+async function logout(){if(window.premuraGoogleLogout)await window.premuraGoogleLogout();S.user=null;save();authScreen()}
 document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>go(b.dataset.page));document.querySelector("#quickAdd").onclick=()=>newReminder();
 if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 if(S.user){nav.style.display="grid";go("home")}else authScreen();

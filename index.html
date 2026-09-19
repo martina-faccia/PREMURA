@@ -26,7 +26,10 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRe
 const firebaseConfig={apiKey:"AIzaSyAbOxBGu4ob4nEj0Sz2d7f_QkvGewiyQ0I",authDomain:"premura-e4663.firebaseapp.com",projectId:"premura-e4663",storageBucket:"premura-e4663.firebasestorage.app",messagingSenderId:"473784277681",appId:"1:473784277681:web:f2520c844ad1476efc6090",measurementId:"G-5712KKVF2H"};
 const auth=getAuth(initializeApp(firebaseConfig));
 const provider=new GoogleAuthProvider(); provider.setCustomParameters({prompt:"select_account"});
-function saveGoogleUser(u){if(!u)return;let s={};try{s=JSON.parse(localStorage.getItem("careState")||"{}")}catch(e){};s.user={uid:u.uid,name:u.displayName||"Utente",email:u.email||"",photoURL:u.photoURL||"",provider:"google"};localStorage.setItem("careState",JSON.stringify(s));}
+function saveGoogleUser(u){
+ if(!u)return;
+ if(window.onPremuraFirebaseUser) window.onPremuraFirebaseUser(u);
+}
 window.premuraGoogleLogin=async()=>{try{const r=await signInWithPopup(auth,provider);saveGoogleUser(r.user);location.reload()}catch(e){if(["auth/popup-blocked","auth/cancelled-popup-request","auth/operation-not-supported-in-this-environment"].includes(e.code)){await signInWithRedirect(auth,provider);return}if(e.code!=="auth/popup-closed-by-user"){console.error(e);alert("Accesso Google non riuscito. Riprova.")}}};
 window.premuraGoogleLogout=async()=>{try{await signOut(auth)}catch(e){}};
 getRedirectResult(auth).then(r=>{if(r&&r.user){saveGoogleUser(r.user);location.reload()}}).catch(console.error);
